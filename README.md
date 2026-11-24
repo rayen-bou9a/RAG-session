@@ -10,7 +10,7 @@ Ce dépôt contient les supports et scripts pratiques pour le workshop sur le **
 
 ### Modèles Gemini utilisés (Free Tier)
 
-Configurés au même endroit dans [`config.py`](config.py) :
+Déclarés directement en haut de chaque script pour rester visibles pendant le workshop :
 
 | Usage | Modèle Gemini | Classe LangChain |
 |---|---|---|
@@ -23,7 +23,7 @@ Configurés au même endroit dans [`config.py`](config.py) :
 
 ```text
 RAG/
-├── config.py                                # Configuration centrale (modèles Gemini, chemins, helpers)
+├── display.py                               # Helpers d'affichage terminal (pour garder les scripts lisibles)
 ├── docs/                                    # Base de connaissances : cours d'algèbre linéaire
 │   ├── matrices_01_definitions_operations.txt
 │   ├── matrices_02_determinant_inverse.txt

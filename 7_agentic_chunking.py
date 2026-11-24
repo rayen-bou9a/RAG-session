@@ -1,15 +1,17 @@
 """
 ÉTAPE 7 : CHUNKING AGENTIQUE (piloté par un LLM)
-------------------------------------------------
-Objectif :
-    Demander directement au LLM (Gemini) d'analyser la structure thématique
-    d'un texte et d'insérer des marqueurs `<<<SPLIT>>>` aux frontières naturelles.
-
-Exécution :
-    python 7_agentic_chunking.py
+Exécution : python 7_agentic_chunking.py
 """
 
-from config import extract_text, get_llm, print_header
+from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+from display import extract_text, show_header, show_text_chunks
+
+load_dotenv()
+
+# Modèle de chat Google Gemini (Free Tier)
+CHAT_MODEL = "gemini-3.5-flash-lite"
 
 SAMPLE_TEXT = """Produit matriciel et propriétés.
 Le produit AB n'est défini que si le nombre de colonnes de A est égal au nombre de lignes de B.
@@ -28,9 +30,9 @@ Ces notions sont au cœur de l'ACP (PCA) en data science et de l'algorithme Page
 
 
 def main():
-    print_header("ÉTAPE 7 : CHUNKING AGENTIQUE (PILOTÉ PAR GEMINI)")
+    show_header("ÉTAPE 7 : CHUNKING AGENTIQUE (PILOTÉ PAR GEMINI)")
 
-    llm = get_llm()
+    llm = ChatGoogleGenerativeAI(model=CHAT_MODEL)
 
     prompt = f"""Tu es un expert en découpage de texte pour un système RAG.
 Découpe le texte ci-dessous en chunks logiques et cohérents.
@@ -45,17 +47,11 @@ Texte :
 {SAMPLE_TEXT}
 """
 
-    print("\nDemande à Gemini d'identifier les frontières thématiques...")
     response = llm.invoke(prompt)
     marked_text = extract_text(response.content)
-
     chunks = [chunk.strip() for chunk in marked_text.split("<<<SPLIT>>>") if chunk.strip()]
 
-    print(f"\nNombre de chunks agentiques créés : {len(chunks)}\n")
-    for i, chunk in enumerate(chunks, 1):
-        print(f"--- Chunk {i} ({len(chunk)} caractères) ---")
-        print(chunk)
-        print()
+    show_text_chunks("Résultats du Chunking Agentique", chunks)
 
 
 if __name__ == "__main__":

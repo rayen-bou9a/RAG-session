@@ -1,17 +1,18 @@
 """
 ÉTAPE 6 : CHUNKING SÉMANTIQUE (SemanticChunker)
------------------------------------------------
-Objectif :
-    Découper un texte en fonction du SENS (similarité entre embeddings de phrases)
-    plutôt qu'à partir d'un nombre fixe de caractères.
-
-Exécution :
-    python 6_semantic_chunking.py
+Exécution : python 6_semantic_chunking.py
 """
 
+from dotenv import load_dotenv
 from langchain_experimental.text_splitter import SemanticChunker
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-from config import get_embeddings, print_header
+from display import show_header, show_text_chunks
+
+load_dotenv()
+
+# Modèle d'embeddings Google Gemini (Free Tier)
+EMBEDDING_MODEL = "gemini-embedding-001"
 
 SAMPLE_TEXT = """Produit matriciel et propriétés.
 Le produit AB n'est défini que si le nombre de colonnes de A est égal au nombre de lignes de B.
@@ -30,21 +31,18 @@ Ces notions sont au cœur de l'ACP (PCA) en data science et de l'algorithme Page
 
 
 def main():
-    print_header("ÉTAPE 6 : CHUNKING SÉMANTIQUE (EMBEDDINGS GEMINI)")
+    show_header("ÉTAPE 6 : CHUNKING SÉMANTIQUE (EMBEDDINGS GEMINI)")
+
+    embedding_model = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL)
 
     semantic_splitter = SemanticChunker(
-        embeddings=get_embeddings(),
+        embeddings=embedding_model,
         breakpoint_threshold_type="percentile",  # ou "standard_deviation"
         breakpoint_threshold_amount=70,
     )
 
     chunks = semantic_splitter.split_text(SAMPLE_TEXT)
-
-    print(f"\nNombre de chunks sémantiques créés : {len(chunks)}\n")
-    for i, chunk in enumerate(chunks, 1):
-        print(f"--- Chunk {i} ({len(chunk)} caractères) ---")
-        print(chunk.strip())
-        print()
+    show_text_chunks("Résultats du Chunking Sémantique", chunks)
 
 
 if __name__ == "__main__":

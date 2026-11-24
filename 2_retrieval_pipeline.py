@@ -1,33 +1,34 @@
 """
 ÉTAPE 2 : PIPELINE DE RECHERCHE VECTORIELLE (Retrieval)
--------------------------------------------------------
-Objectif :
-    Interroger la base vectorielle ChromaDB pour retrouver les passages du cours
-    les plus proches sémantiquement d'une question d'étudiant.
-
-Exécution :
-    python 2_retrieval_pipeline.py
+Exécution : python 2_retrieval_pipeline.py
 """
 
+from dotenv import load_dotenv
 from langchain_chroma import Chroma
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-from config import DB_DIR, get_embeddings, print_header
+from display import show_header, show_retrieved_docs
+
+load_dotenv()
+
+# Configuration
+DB_DIR = "db/chroma_db"
+EMBEDDING_MODEL = "gemini-embedding-001"
 
 
 def main():
-    print_header("ÉTAPE 2 : RECHERCHE VECTORIELLE (RETRIEVAL)")
+    show_header("ÉTAPE 2 : RECHERCHE VECTORIELLE (RETRIEVAL)")
 
-    # 1. Connexion à la base vectorielle existante
+    # 1. Connexion à la base vectorielle ChromaDB
+    embedding_model = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL)
     db = Chroma(
         persist_directory=DB_DIR,
-        embedding_function=get_embeddings(),
+        embedding_function=embedding_model,
         collection_metadata={"hnsw:space": "cosine"},
     )
 
-    # 2. Question posée par l'étudiant
+    # 2. Question et recherche des k extraits les plus proches
     query = "Quelles sont les valeurs propres de la matrice Q et comment calculer Q^5 ?"
-
-    # 3. Configuration du retriever (top-k chunks les plus similaires)
     retriever = db.as_retriever(search_kwargs={"k": 3})
 
     # Variante avec seuil de similarité minimal :
@@ -38,24 +39,15 @@ def main():
 
     relevant_docs = retriever.invoke(query)
 
-    # 4. Affichage des résultats retrouvés
-    print(f"\nQuestion : {query}")
-    print(f"Extraits retrouvés : {len(relevant_docs)}\n")
-
-    for i, doc in enumerate(relevant_docs, 1):
-        source = doc.metadata.get("source", "inconnu")
-        print(f"--- Extrait {i} (Source : {source}) ---")
-        print(doc.page_content)
-        print()
+    # 3. Affichage
+    show_retrieved_docs(query, relevant_docs)
 
 
 if __name__ == "__main__":
     main()
 
 
-# =============================================================================
-# Questions d'entraînement (issues des 4 chapitres du cours sur les matrices) :
-# =============================================================================
+# Questions d'entraînement sur les 4 chapitres du cours :
 # 1. "Pourquoi le produit matriciel AB est-il différent de BA ? Donne l'exemple du cours."
 # 2. "Quelle est la complexité de l'algorithme de Strassen pour le produit matriciel ?"
 # 3. "Quelle est l'interprétation géométrique du déterminant d'une matrice 2x2 et 3x3 ?"
