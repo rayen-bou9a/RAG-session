@@ -1,0 +1,5 @@
+Nvidia Corporation is an American technology company headquartered in Santa Clara, California. It was founded in April 1993 by Jensen Huang, Chris Malachowsky, and Curtis Priem.
+
+NVIDIA's first graphics accelerator was called the NV1, released in 1995. It combined 2D/3D graphics, audio, and a Sega Saturn gamepad port on a single PCI card.
+
+To enter the mobile processor and baseband market, NVIDIA acquired Icera in May 2011 for $367 million. Today, NVIDIA is best known for its GeForce GPUs, CUDA parallel computing platform, and AI data center accelerators.
