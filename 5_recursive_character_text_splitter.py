@@ -1,48 +1,59 @@
+"""
+ÉTAPE 5 : DÉCOUPAGE RÉCURSIF (RecursiveCharacterTextSplitter)
+-------------------------------------------------------------
+Objectif :
+    Comparer le découpage simple (`CharacterTextSplitter`) avec le découpage
+    récursif (`RecursiveCharacterTextSplitter`), qui essaie plusieurs séparateurs
+    dans l'ordre (paragraphes, lignes, phrases, mots) pour respecter la taille maximale.
+
+Exécution :
+    python 5_recursive_character_text_splitter.py
+"""
+
 from langchain_text_splitters import CharacterTextSplitter, RecursiveCharacterTextSplitter
 
-tesla_text = """Tesla's Q3 Results
+from config import print_header
 
-Tesla reported record revenue of $25.2B in Q3 2024.
+SAMPLE_TEXT = """Produit matriciel
 
-Model Y Performance
+Le produit AB n'est défini que si le nombre de colonnes de A est égal au nombre de lignes de B.
 
-The Model Y became the best-selling vehicle globally, with 350,000 units sold.
+Déterminant et inverse
 
-Production Challenges
+Une matrice carrée A est inversible si et seulement si son déterminant det(A) est différent de 0.
 
-Supply chain issues caused a 12% increase in production costs.
+Pivot de Gauss
 
-This is one very long paragraph that definitely exceeds our 100 character limit and has no double newlines inside it whatsoever making it impossible to split properly."""
-
-
-# Example 1: CharacterTextSplitter (uncomment to compare)
-# splitter1 = CharacterTextSplitter(
-#     separator=" ",  # Default separator. Other options include ["\n\n", "\n", ". ", " ", ""]
-#     chunk_size=100,
-#     chunk_overlap=0
-# )
-#
-# chunks1 = splitter1.split_text(tesla_text)
-# for i, chunk in enumerate(chunks1, 1):
-#     print(f"Chunk {i}: ({len(chunk)} chars)")
-#     print(f'"{chunk}"')
-#     print()
+La méthode du pivot de Gauss transforme le système AX = b en une matrice triangulaire supérieure grâce à des opérations élémentaires sur les lignes sans jamais modifier l'ensemble des solutions du système linéaire étudié."""
 
 
-# Example 2: RecursiveCharacterTextSplitter fixes this
-print("\n" + "=" * 60)
-print("2. RECURSIVE CHARACTER TEXT SPLITTER SOLUTION")
-print("=" * 60)
+def show_chunks(chunks):
+    for i, chunk in enumerate(chunks, 1):
+        print(f'Chunk {i} ({len(chunk)} caractères) :\n"{chunk}"\n')
 
-recursive_splitter = RecursiveCharacterTextSplitter(
-    separators=["\n\n", "\n", ". ", " ", ""],  # Multiple separators
-    chunk_size=100,
-    chunk_overlap=0,
-)
 
-chunks2 = recursive_splitter.split_text(tesla_text)
-print("Same problem text, but with RecursiveCharacterTextSplitter:")
-for i, chunk in enumerate(chunks2, 1):
-    print(f"Chunk {i}: ({len(chunk)} chars)")
-    print(f'"{chunk}"')
-    print()
+def main():
+    print_header("ÉTAPE 5 : CHARACTER vs RECURSIVE CHARACTER TEXT SPLITTER")
+
+    # 1. Découpage simple (échoue à couper le dernier paragraphe trop long)
+    print("\n1) CharacterTextSplitter (un seul séparateur '\\n\\n') :\n")
+    simple_splitter = CharacterTextSplitter(
+        separator="\n\n",
+        chunk_size=120,
+        chunk_overlap=0,
+    )
+    show_chunks(simple_splitter.split_text(SAMPLE_TEXT))
+
+    # 2. Découpage récursif (essaie \n\n, puis \n, puis '. ', puis ' ')
+    print("-" * 65)
+    print("2) RecursiveCharacterTextSplitter (plusieurs séparateurs) :\n")
+    recursive_splitter = RecursiveCharacterTextSplitter(
+        separators=["\n\n", "\n", ". ", " ", ""],
+        chunk_size=120,
+        chunk_overlap=0,
+    )
+    show_chunks(recursive_splitter.split_text(SAMPLE_TEXT))
+
+
+if __name__ == "__main__":
+    main()

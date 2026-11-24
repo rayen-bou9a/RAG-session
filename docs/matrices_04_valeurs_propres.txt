@@ -1,0 +1,64 @@
+COURS D'ALGEBRE LINEAIRE - CHAPITRE 4 : VALEURS PROPRES, VECTEURS PROPRES ET DIAGONALISATION
+
+======================================================================
+1. DEFINITIONS
+======================================================================
+
+Soit A une matrice carree de taille n. Un scalaire lambda est une valeur propre de A s'il existe un vecteur non nul v tel que A v = lambda v. Le vecteur v est alors appele vecteur propre associe a lambda. Intuitivement, un vecteur propre est une direction que la matrice ne fait que dilater ou contracter, sans la faire tourner.
+
+Polynome caracteristique : les valeurs propres de A sont les racines du polynome det(A - lambda x I) = 0. Pour une matrice 2 x 2, ce polynome s'ecrit lambda^2 - tr(A) x lambda + det(A).
+
+Deux relations fondamentales :
+- La somme des valeurs propres (comptees avec multiplicite) est egale a la trace de A.
+- Le produit des valeurs propres est egal au determinant de A.
+
+Une matrice est inversible si et seulement si 0 n'est pas valeur propre.
+
+======================================================================
+2. EXEMPLE DETAILLE : LA MATRICE Q
+======================================================================
+
+Soit Q = [[2, 1], [1, 2]]. On a tr(Q) = 4 et det(Q) = 4 - 1 = 3. Le polynome caracteristique est lambda^2 - 4 lambda + 3 = (lambda - 1)(lambda - 3). Les valeurs propres de Q sont donc lambda_1 = 3 et lambda_2 = 1. On verifie : 3 + 1 = 4 = tr(Q) et 3 x 1 = 3 = det(Q).
+
+Vecteurs propres :
+- Pour lambda = 3 : on resout (Q - 3I)v = 0, soit -x + y = 0. Le vecteur propre est v1 = (1, 1).
+- Pour lambda = 1 : on resout (Q - I)v = 0, soit x + y = 0. Le vecteur propre est v2 = (1, -1).
+
+======================================================================
+3. DIAGONALISATION
+======================================================================
+
+Une matrice A est diagonalisable s'il existe une matrice inversible P et une matrice diagonale D telles que A = P D P^(-1). Les colonnes de P sont des vecteurs propres de A et les coefficients diagonaux de D sont les valeurs propres correspondantes.
+
+Pour Q : P = [[1, 1], [1, -1]] et D = diag(3, 1).
+
+Interet principal : calculer des puissances. On a A^n = P D^n P^(-1), et D^n s'obtient en elevant chaque coefficient diagonal a la puissance n. Pour Q, on trouve Q^n = (1/2) x [[3^n + 1, 3^n - 1], [3^n - 1, 3^n + 1]]. Par exemple, pour n = 5, 3^5 = 243 et Q^5 = [[122, 121], [121, 122]].
+
+Condition de diagonalisabilite : une matrice n x n est diagonalisable si et seulement si elle possede n vecteurs propres lineairement independants. C'est automatique si elle a n valeurs propres distinctes.
+
+Exemple de matrice non diagonalisable : J = [[1, 1], [0, 1]]. Elle a une seule valeur propre, lambda = 1, double, mais l'espace propre est de dimension 1 (engendre par (1, 0)). Il manque un vecteur propre, donc J n'est pas diagonalisable.
+
+Exemple sans valeur propre reelle : la matrice de rotation de 90 degres R = [[0, -1], [1, 0]] a pour polynome caracteristique lambda^2 + 1. Ses valeurs propres sont i et -i, qui sont complexes. Aucun vecteur reel n'est conserve en direction par une rotation de 90 degres.
+
+======================================================================
+4. AUTRE EXEMPLE : LA MATRICE B2
+======================================================================
+
+Soit B2 = [[4, 1], [2, 3]]. Alors tr(B2) = 7 et det(B2) = 10, donc le polynome caracteristique est lambda^2 - 7 lambda + 10 = (lambda - 2)(lambda - 5). Les valeurs propres sont 2 et 5. Le vecteur propre associe a 5 est (1, 1) et celui associe a 2 est (1, -2).
+
+======================================================================
+5. THEOREMES IMPORTANTS
+======================================================================
+
+Theoreme spectral : toute matrice reelle symetrique est diagonalisable dans une base orthonormee. Ses valeurs propres sont toutes reelles, et ses vecteurs propres associes a des valeurs propres distinctes sont orthogonaux. La matrice Q ci-dessus (symetrique) en est un exemple : (1, 1) et (1, -1) sont bien orthogonaux.
+
+Theoreme de Cayley-Hamilton : toute matrice carree annule son propre polynome caracteristique. Pour Q, cela donne Q^2 - 4Q + 3I = 0. Verification : Q^2 = [[5, 4], [4, 5]], donc Q^2 - 4Q + 3I = [[5-8+3, 4-4], [4-4, 5-8+3]] = [[0, 0], [0, 0]].
+
+======================================================================
+6. APPLICATIONS EN INFORMATIQUE ET EN DATA SCIENCE
+======================================================================
+
+- Analyse en composantes principales (ACP, ou PCA en anglais) : on calcule les vecteurs propres de la matrice de covariance des donnees. Les vecteurs associes aux plus grandes valeurs propres donnent les directions de plus grande variance, ce qui permet de reduire la dimension des donnees.
+- PageRank (Google) : le classement des pages web correspond au vecteur propre dominant de la matrice des liens, avec un facteur d'amortissement habituellement fixe a 0,85.
+- Suite de Fibonacci : la matrice F = [[1, 1], [1, 0]] verifie F^n = [[F(n+1), F(n)], [F(n), F(n-1)]]. Ses valeurs propres sont (1 + racine de 5)/2, soit environ 1,618 (le nombre d'or), et (1 - racine de 5)/2, soit environ -0,618. La diagonalisation de F fournit la formule de Binet.
+- Embeddings et RAG : la similarite cosinus entre deux vecteurs utilise le produit scalaire et la norme, notions directement liees a l'algebre lineaire de ce cours.

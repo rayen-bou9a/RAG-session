@@ -1,38 +1,51 @@
+"""
+ÉTAPE 6 : CHUNKING SÉMANTIQUE (SemanticChunker)
+-----------------------------------------------
+Objectif :
+    Découper un texte en fonction du SENS (similarité entre embeddings de phrases)
+    plutôt qu'à partir d'un nombre fixe de caractères.
+
+Exécution :
+    python 6_semantic_chunking.py
+"""
+
 from langchain_experimental.text_splitter import SemanticChunker
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+from config import get_embeddings, print_header
 
-# Same Tesla text but structured to show semantic grouping
-tesla_text = """Tesla's Q3 Results
-Tesla reported record revenue of $25.2B in Q3 2024.
-The company exceeded analyst expectations by 15%.
-Revenue growth was driven by strong vehicle deliveries.
+SAMPLE_TEXT = """Produit matriciel et propriétés.
+Le produit AB n'est défini que si le nombre de colonnes de A est égal au nombre de lignes de B.
+En général, le produit matriciel n'est pas commutatif : AB est différent de BA.
+En revanche, il est associatif et la trace vérifie toujours tr(AB) = tr(BA).
 
-Model Y Performance
-The Model Y became the best-selling vehicle globally, with 350,000 units sold.
-Customer satisfaction ratings reached an all-time high of 96%.
-Model Y now represents 60% of Tesla's total vehicle sales.
+Déterminant et matrice inversible.
+Pour une matrice 2x2 [[a, b], [c, d]], le déterminant vaut ad - bc.
+Une matrice carrée est inversible si et seulement si son déterminant est non nul.
+Géométriquement, la valeur absolue du déterminant représente l'aire ou le volume de la figure transformée.
 
-Production Challenges
-Supply chain issues caused a 12% increase in production costs.
-Tesla is working to diversify its supplier base.
-New manufacturing techniques are being implemented to reduce costs."""
+Valeurs propres et diagonalisation.
+Un scalaire lambda est valeur propre de A s'il existe un vecteur non nul v tel que Av = lambda v.
+La diagonalisation écrit A = P D P^(-1), ce qui permet de calculer très facilement les puissances A^n.
+Ces notions sont au cœur de l'ACP (PCA) en data science et de l'algorithme PageRank."""
 
-# Semantic Chunker - groups by meaning, not structure
-semantic_splitter = SemanticChunker(
-    embeddings=GoogleGenerativeAIEmbeddings(model="gemini-embedding-001"),
-    breakpoint_threshold_type="percentile",  # or "standard_deviation"
-    breakpoint_threshold_amount=70,
-)
 
-chunks = semantic_splitter.split_text(tesla_text)
+def main():
+    print_header("ÉTAPE 6 : CHUNKING SÉMANTIQUE (EMBEDDINGS GEMINI)")
 
-print("SEMANTIC CHUNKING RESULTS:")
-print("=" * 50)
-for i, chunk in enumerate(chunks, 1):
-    print(f"Chunk {i}: ({len(chunk)} chars)")
-    print(f'"{chunk}"')
-    print()
+    semantic_splitter = SemanticChunker(
+        embeddings=get_embeddings(),
+        breakpoint_threshold_type="percentile",  # ou "standard_deviation"
+        breakpoint_threshold_amount=70,
+    )
+
+    chunks = semantic_splitter.split_text(SAMPLE_TEXT)
+
+    print(f"\nNombre de chunks sémantiques créés : {len(chunks)}\n")
+    for i, chunk in enumerate(chunks, 1):
+        print(f"--- Chunk {i} ({len(chunk)} caractères) ---")
+        print(chunk.strip())
+        print()
+
+
+if __name__ == "__main__":
+    main()

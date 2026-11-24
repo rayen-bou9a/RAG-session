@@ -1,0 +1,72 @@
+COURS D'ALGEBRE LINEAIRE - CHAPITRE 1 : DEFINITIONS ET OPERATIONS SUR LES MATRICES
+
+======================================================================
+1. DEFINITION D'UNE MATRICE
+======================================================================
+
+Une matrice de taille m x n est un tableau de nombres reels (ou complexes) comportant m lignes et n colonnes. L'ensemble des matrices a m lignes et n colonnes a coefficients reels se note M_{m,n}(R). Le coefficient situe a la ligne i et a la colonne j se note a_ij.
+
+Exemple : la matrice A = [[1, 2], [3, 4]] est une matrice carree de taille 2 x 2. Ses lignes sont (1, 2) et (3, 4). Dans tout ce cours, la matrice A designe toujours cette matrice 2 x 2, et la matrice B designe B = [[5, 6], [7, 8]].
+
+======================================================================
+2. TYPES DE MATRICES PARTICULIERS
+======================================================================
+
+- Matrice carree : autant de lignes que de colonnes (m = n).
+- Matrice ligne : une seule ligne (taille 1 x n).
+- Matrice colonne : une seule colonne (taille m x 1). On l'appelle aussi vecteur colonne.
+- Matrice nulle : tous les coefficients valent 0.
+- Matrice identite I_n : matrice carree avec des 1 sur la diagonale et des 0 ailleurs. Elle est l'element neutre du produit matriciel : A x I = I x A = A.
+- Matrice diagonale : tous les coefficients hors de la diagonale sont nuls.
+- Matrice triangulaire superieure : tous les coefficients situes sous la diagonale sont nuls. Triangulaire inferieure : tous ceux situes au-dessus sont nuls.
+- Matrice symetrique : A^T = A, c'est-a-dire a_ij = a_ji pour tous i et j.
+- Matrice antisymetrique : A^T = -A. Sa diagonale est forcement nulle.
+
+======================================================================
+3. ADDITION ET MULTIPLICATION PAR UN SCALAIRE
+======================================================================
+
+On ne peut additionner que deux matrices de meme taille. L'addition se fait coefficient par coefficient.
+
+Exemple : A + B = [[1+5, 2+6], [3+7, 4+8]] = [[6, 8], [10, 12]].
+
+La multiplication par un scalaire k multiplie chaque coefficient par k.
+
+Exemple : 3A = [[3, 6], [9, 12]].
+
+======================================================================
+4. PRODUIT MATRICIEL
+======================================================================
+
+Le produit AB n'est defini que si le nombre de colonnes de A est egal au nombre de lignes de B. Si A est de taille m x n et B de taille n x p, alors AB est de taille m x p.
+
+Formule : le coefficient (i, j) de AB vaut la somme, pour k allant de 1 a n, des produits a_ik x b_kj. Autrement dit, on multiplie la ligne i de A par la colonne j de B.
+
+Exemple complet avec A et B :
+AB = [[1x5 + 2x7, 1x6 + 2x8], [3x5 + 4x7, 3x6 + 4x8]] = [[19, 22], [43, 50]].
+BA = [[5x1 + 6x3, 5x2 + 6x4], [7x1 + 8x3, 7x2 + 8x4]] = [[23, 34], [31, 46]].
+
+On constate que AB est different de BA : le produit matriciel n'est PAS commutatif en general. Il est en revanche associatif : (AB)C = A(BC), et distributif par rapport a l'addition.
+
+Autre exemple, avec des tailles differentes : soit C = [[1, 2, 3], [4, 5, 6]] de taille 2 x 3. Alors le produit C x C^T est de taille 2 x 2 et vaut [[14, 32], [32, 77]]. Par exemple 14 = 1x1 + 2x2 + 3x3.
+
+Puissances d'une matrice carree : A^2 = A x A = [[7, 10], [15, 22]].
+
+Cout de calcul : le produit naif de deux matrices carrees de taille n demande de l'ordre de n^3 multiplications. L'algorithme de Strassen (1969) abaisse la complexite a environ n^2,807.
+
+======================================================================
+5. TRANSPOSEE ET TRACE
+======================================================================
+
+La transposee d'une matrice A, notee A^T, est obtenue en echangeant lignes et colonnes. Si A est m x n, alors A^T est n x m.
+
+Exemple : pour C = [[1, 2, 3], [4, 5, 6]], on a C^T = [[1, 4], [2, 5], [3, 6]].
+
+Proprietes de la transposee :
+- (A^T)^T = A
+- (A + B)^T = A^T + B^T
+- (AB)^T = B^T x A^T (attention : l'ordre est inverse)
+
+La trace d'une matrice carree est la somme des coefficients de sa diagonale. Pour A, tr(A) = 1 + 4 = 5.
+
+Propriete importante : tr(AB) = tr(BA), meme si AB et BA sont differents. Verification avec nos matrices : tr(AB) = 19 + 50 = 69 et tr(BA) = 23 + 46 = 69.

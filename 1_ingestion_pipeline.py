@@ -1,127 +1,109 @@
+"""
+ÉTAPE 1 : PIPELINE D'INGESTION (Document Loading -> Chunking -> Vector Store)
+-----------------------------------------------------------------------------
+Objectif :
+    1. Charger les chapitres du cours d'algèbre linéaire depuis le dossier `docs/`.
+    2. Découper chaque document en morceaux (chunks).
+    3. Calculer les embeddings avec Gemini et les stocker dans ChromaDB.
+
+Exécution :
+    python 1_ingestion_pipeline.py
+"""
+
 import os
-from langchain_community.document_loaders import TextLoader, DirectoryLoader
-from langchain_text_splitters import CharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
-from dotenv import load_dotenv
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
+from langchain_text_splitters import CharacterTextSplitter
 
-load_dotenv()
+from config import DB_DIR, DOCS_DIR, get_embeddings, print_header
 
 
-def load_documents(docs_path="docs"):
-    """Load all text files from the docs directory"""
-    print(f"Loading documents from {docs_path}...")
+def load_documents(docs_path: str = DOCS_DIR):
+    """Charge tous les fichiers .txt du dossier `docs/`."""
+    print(f"Chargement des documents depuis '{docs_path}/'...")
 
-    # Check if docs directory exists
     if not os.path.exists(docs_path):
         raise FileNotFoundError(
-            f"The directory {docs_path} does not exist. Please create it and add your company files."
+            f"Le dossier '{docs_path}' n'existe pas. Ajoutez vos fichiers .txt dedans."
         )
 
-    # Load all .txt files from the docs directory
     loader = DirectoryLoader(
         path=docs_path,
         glob="*.txt",
         loader_cls=TextLoader,
         loader_kwargs={"encoding": "utf-8"},
     )
-
     documents = loader.load()
 
-    if len(documents) == 0:
-        raise FileNotFoundError(
-            f"No .txt files found in {docs_path}. Please add your company documents."
-        )
+    if not documents:
+        raise FileNotFoundError(f"Aucun fichier .txt trouvé dans '{docs_path}/'.")
 
-    for i, doc in enumerate(documents[:2]):  # Show first 2 documents
-        print(f"\nDocument {i+1}:")
-        print(f"  Source: {doc.metadata['source']}")
-        print(f"  Content length: {len(doc.page_content)} characters")
-        print(f"  Content preview: {doc.page_content[:100]}...")
-        print(f"  metadata: {doc.metadata}")
+    print(f"-> {len(documents)} documents chargés :")
+    for i, doc in enumerate(documents, 1):
+        print(f"   {i}. {doc.metadata['source']} ({len(doc.page_content)} caractères)")
 
     return documents
 
 
-def split_documents(documents, chunk_size=1000, chunk_overlap=0):
-    """Split documents into smaller chunks with overlap"""
-    print("Splitting documents into chunks...")
+def split_documents(documents, chunk_size: int = 800, chunk_overlap: int = 100):
+    """Découpe les documents en chunks avec un léger chevauchement (overlap)."""
+    print(f"\nDécoupage en chunks (taille={chunk_size}, overlap={chunk_overlap})...")
 
-    text_splitter = CharacterTextSplitter(
+    splitter = CharacterTextSplitter(
+        separator="\n\n",
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
     )
+    chunks = splitter.split_documents(documents)
 
-    chunks = text_splitter.split_documents(documents)
-
-    if chunks:
-        for i, chunk in enumerate(chunks[:5]):
-            print(f"\n--- Chunk {i+1} ---")
-            print(f"Source: {chunk.metadata['source']}")
-            print(f"Length: {len(chunk.page_content)} characters")
-            print("Content:")
-            print(chunk.page_content)
-            print("-" * 50)
-
-        if len(chunks) > 5:
-            print(f"\n... and {len(chunks) - 5} more chunks")
+    print(f"-> {len(chunks)} chunks créés. Aperçu des 3 premiers :")
+    for i, chunk in enumerate(chunks[:3], 1):
+        preview = chunk.page_content.replace("\n", " ")[:120]
+        print(f"\n  [Chunk {i}] Source : {chunk.metadata['source']} ({len(chunk.page_content)} chars)")
+        print(f"  Aperçu : {preview}...")
 
     return chunks
 
 
-def create_vector_store(chunks, persist_directory="db/chroma_db"):
-    """Create and persist ChromaDB vector store"""
-    print("Creating embeddings and storing in ChromaDB...")
+def create_vector_store(chunks, persist_directory: str = DB_DIR):
+    """Génère les embeddings et sauvegarde la base vectorielle ChromaDB."""
+    print("\nCalcul des embeddings (Gemini) et stockage dans ChromaDB...")
 
-    embedding_model = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001")
-
-    # Create ChromaDB vector store
-    print("--- Creating vector store ---")
     vectorstore = Chroma.from_documents(
         documents=chunks,
-        embedding=embedding_model,
+        embedding=get_embeddings(),
         persist_directory=persist_directory,
         collection_metadata={"hnsw:space": "cosine"},
     )
-    print("--- Finished creating vector store ---")
 
-    print(f"Vector store created and saved to {persist_directory}")
+    print(f"-> Base vectorielle sauvegardée dans '{persist_directory}'.")
     return vectorstore
 
 
 def main():
-    """Main ingestion pipeline"""
-    print("=== RAG Document Ingestion Pipeline ===\n")
+    print_header("ÉTAPE 1 : INGESTION DES DOCUMENTS (COURS MATRICES)")
 
-    # Define paths
-    docs_path = "docs"
-    persistent_directory = "db/chroma_db"
-
-    # Check if vector store already exists
-    if os.path.exists(persistent_directory):
-        print("✅ Vector store already exists. No need to re-process documents.")
-
-        embedding_model = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001")
+    if os.path.exists(DB_DIR):
+        print(f"La base '{DB_DIR}' existe déjà. Chargement sans ré-indexation...")
         vectorstore = Chroma(
-            persist_directory=persistent_directory,
-            embedding_function=embedding_model,
+            persist_directory=DB_DIR,
+            embedding_function=get_embeddings(),
             collection_metadata={"hnsw:space": "cosine"},
         )
-        print(f"Loaded existing vector store with {vectorstore._collection.count()} documents")
+        print(f"-> {vectorstore._collection.count()} chunks disponibles dans ChromaDB.")
+        print("   (Supprimez le dossier 'db/' si vous modifiez les fichiers de 'docs/'.)")
         return vectorstore
 
-    print("Persistent directory does not exist. Initializing vector store...\n")
+    # 1. Charger les chapitres du cours
+    documents = load_documents(DOCS_DIR)
 
-    # Step 1: Load documents
-    documents = load_documents(docs_path)
-
-    # Step 2: Split into chunks
+    # 2. Découper en chunks
     chunks = split_documents(documents)
 
-    # Step 3: Create vector store
-    vectorstore = create_vector_store(chunks, persistent_directory)
+    # 3. Indexer dans ChromaDB
+    vectorstore = create_vector_store(chunks, DB_DIR)
 
-    print("\n✅ Ingestion complete! Your documents are now ready for RAG queries.")
+    print("\nIngestion terminée ! Vos documents sont prêts pour le RAG.")
     return vectorstore
 
 

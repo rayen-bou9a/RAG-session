@@ -1,0 +1,70 @@
+COURS D'ALGEBRE LINEAIRE - CHAPITRE 2 : DETERMINANT, INVERSE ET RANG
+
+======================================================================
+1. DETERMINANT D'UNE MATRICE 2 x 2
+======================================================================
+
+Pour une matrice carree [[a, b], [c, d]], le determinant vaut ad - bc.
+
+Exemple avec la matrice A = [[1, 2], [3, 4]] du chapitre 1 : det(A) = 1x4 - 2x3 = -2.
+
+Interpretation geometrique : la valeur absolue du determinant est l'aire du parallelogramme construit sur les deux vecteurs colonnes. Pour une matrice 3 x 3, c'est le volume du parallelepipede. Si le determinant est nul, les vecteurs sont alignes (ou coplanaires) et la figure est aplatie.
+
+======================================================================
+2. DETERMINANT D'UNE MATRICE 3 x 3
+======================================================================
+
+On utilise le developpement selon une ligne (formule des cofacteurs) ou la regle de Sarrus.
+
+Exemple 1 : N = [[2, 1, 0], [1, 3, 1], [0, 1, 2]].
+Developpement selon la premiere ligne :
+det(N) = 2 x (3x2 - 1x1) - 1 x (1x2 - 1x0) + 0 = 2 x 5 - 1 x 2 = 8.
+La matrice N est donc inversible.
+
+Exemple 2 (matrice singuliere) : M = [[2, 0, 1], [1, 3, 2], [1, 1, 1]].
+det(M) = 2 x (3x1 - 2x1) - 0 + 1 x (1x1 - 3x1) = 2 x 1 + (-2) = 0.
+La matrice M n'est pas inversible. On peut expliquer pourquoi : la premiere ligne de M est une combinaison des deux autres, car L1 = -L2 + 3 x L3. Les lignes sont donc liees et le rang de M est 2, pas 3.
+
+======================================================================
+3. PROPRIETES DU DETERMINANT
+======================================================================
+
+- det(AB) = det(A) x det(B)
+- det(A^T) = det(A)
+- det(kA) = k^n x det(A) pour une matrice de taille n x n (et non k x det(A))
+- Echanger deux lignes change le signe du determinant.
+- Si deux lignes sont proportionnelles (ou egales), le determinant est nul.
+- Le determinant d'une matrice triangulaire est le produit des coefficients de sa diagonale.
+- det(I_n) = 1.
+
+======================================================================
+4. MATRICE INVERSIBLE ET INVERSE
+======================================================================
+
+Une matrice carree A est inversible s'il existe une matrice A^(-1) telle que A x A^(-1) = A^(-1) x A = I. Theoreme : A est inversible si et seulement si det(A) est different de 0.
+
+Formule pour une matrice 2 x 2 : l'inverse de [[a, b], [c, d]] est (1 / (ad - bc)) x [[d, -b], [-c, a]].
+
+Exemple 1 : pour A = [[1, 2], [3, 4]], det(A) = -2, donc A^(-1) = (1 / -2) x [[4, -2], [-3, 1]] = [[-2, 1], [1,5, -0,5]].
+Verification : la premiere ligne de A multipliee par la premiere colonne de A^(-1) donne 1x(-2) + 2x1,5 = 1, et la premiere ligne par la deuxieme colonne donne 1x1 + 2x(-0,5) = 0. On retrouve bien la matrice identite.
+
+Exemple 2 : pour P = [[4, 7], [2, 6]], det(P) = 24 - 14 = 10, donc P^(-1) = (1/10) x [[6, -7], [-2, 4]] = [[0,6, -0,7], [-0,2, 0,4]].
+
+Proprietes de l'inverse :
+- (AB)^(-1) = B^(-1) x A^(-1) (ordre inverse, comme pour la transposee)
+- (A^T)^(-1) = (A^(-1))^T
+- det(A^(-1)) = 1 / det(A)
+
+Methode generale pour une matrice de taille n : A^(-1) = (1 / det(A)) x (comatrice de A)^T. On peut aussi appliquer la methode de Gauss-Jordan sur la matrice augmentee [A | I] : lorsque A est transformee en I, la partie droite devient A^(-1). Dans la pratique, la methode de Gauss-Jordan est bien plus efficace que la formule des cofacteurs pour les grandes matrices.
+
+======================================================================
+5. RANG D'UNE MATRICE
+======================================================================
+
+Le rang d'une matrice est le nombre maximal de lignes (ou de colonnes) lineairement independantes. Il est aussi egal a la dimension de l'image de l'application lineaire associee.
+
+- Une matrice carree de taille n est inversible si et seulement si son rang vaut n.
+- Le rang de A est egal au rang de A^T.
+- Le rang de la matrice M de la section 2 vaut 2.
+
+Theoreme du rang : pour une matrice A de taille m x n, on a n = rang(A) + dim(Ker A), ou Ker A est le noyau de A (l'ensemble des vecteurs X tels que AX = 0).

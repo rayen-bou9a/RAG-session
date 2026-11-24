@@ -1,103 +1,117 @@
-from dotenv import load_dotenv
+"""
+ÉTAPE 4 : RAG CONVERSATIONNEL AVEC MÉMOIRE (History-Aware Generation)
+---------------------------------------------------------------------
+Objectif :
+    Discuter avec le cours d'algèbre linéaire en gardant l'historique :
+    - Reformule les questions de suivi ("Et ses vecteurs propres ?") en question autonome.
+    - Recherche les bons extraits dans ChromaDB avec la question reformulée.
+    - Génère la réponse avec Gemini en tenant compte de la conversation.
+
+Exécution :
+    python 4_history_aware_generation.py
+"""
+
 from langchain_chroma import Chroma
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-# Load environment variables
-load_dotenv()
-
-# Connect to your document database
-persistent_directory = "db/chroma_db"
-embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001")
-db = Chroma(persist_directory=persistent_directory, embedding_function=embeddings)
-
-# Set up Gemini AI model (free tier)
-model = ChatGoogleGenerativeAI(model="gemini-3.5-flash-lite")
-
-# Store our conversation as messages
-chat_history = []
+from config import DB_DIR, extract_text, get_embeddings, get_llm, print_header
 
 
-def extract_text(content):
-    if isinstance(content, str):
-        return content
-    return "".join(block.get("text", "") for block in content if isinstance(block, dict))
+def build_standalone_question(model, chat_history, user_question: str) -> str:
+    """Reformule la question en tenant compte de l'historique pour améliorer la recherche."""
+    if not chat_history:
+        return user_question
+
+    messages = [
+        SystemMessage(
+            content=(
+                "À partir de l'historique de conversation, reformule la nouvelle question "
+                "pour qu'elle soit autonome et claire pour une recherche documentaire. "
+                "Retourne uniquement la question reformulée."
+            )
+        ),
+        *chat_history,
+        HumanMessage(content=f"Nouvelle question : {user_question}"),
+    ]
+    result = model.invoke(messages)
+    return extract_text(result.content).strip()
 
 
-def ask_question(user_question):
-    print(f"\n--- You asked: {user_question} ---")
+def ask_question(db, model, chat_history, user_question: str) -> str:
+    """Exécute un tour complet de RAG conversationnel."""
+    print(f"\n--- Question : {user_question} ---")
 
-    # Step 1: Make the question clear using conversation history
-    if chat_history:
-        # Ask AI to make the question standalone
-        messages = [
-            SystemMessage(
-                content="Given the chat history, rewrite the new question to be standalone and searchable. Just return the rewritten question."
-            ),
-        ] + chat_history + [
-            HumanMessage(content=f"New question: {user_question}")
-        ]
+    # 1. Reformulation si un historique existe
+    search_question = build_standalone_question(model, chat_history, user_question)
+    if search_question != user_question:
+        print(f"Recherche reformulée : {search_question}")
 
-        result = model.invoke(messages)
-        search_question = extract_text(result.content).strip()
-        print(f"Searching for: {search_question}")
-    else:
-        search_question = user_question
-
-    # Step 2: Find relevant documents
+    # 2. Recherche vectorielle
     retriever = db.as_retriever(search_kwargs={"k": 3})
     docs = retriever.invoke(search_question)
 
-    print(f"Found {len(docs)} relevant documents:")
+    print(f"Extraits trouvés : {len(docs)}")
     for i, doc in enumerate(docs, 1):
-        # Show first 2 lines of each document
-        lines = doc.page_content.split("\n")[:2]
-        preview = "\n".join(lines)
-        print(f"  Doc {i}: {preview}...")
+        source = doc.metadata.get("source", "inconnu")
+        preview = doc.page_content.replace("\n", " ")[:90]
+        print(f"  {i}. [{source}] {preview}...")
 
-    # Step 3: Create final prompt
-    docs_text = "\n".join([f"- {doc.page_content}" for doc in docs])
-    combined_input = f"""Based on the following documents, please answer this question: {user_question}
+    # 3. Construction du prompt final
+    context_text = "\n\n".join(f"- {doc.page_content}" for doc in docs)
+    prompt = f"""En te basant uniquement sur les extraits de cours suivants, réponds à la question : {user_question}
 
-    Documents:
-    {docs_text}
+Extraits du cours :
+{context_text}
 
-    Please provide a clear, helpful answer using only the information from these documents. If you can't find the answer in the documents, say "I don't have enough information to answer that question based on the provided documents."
-    """
+Si l'information ne se trouve pas dans les extraits, dis simplement que tu n'as pas assez d'informations dans les documents fournis.
+"""
 
-    # Step 4: Get the answer
+    # 4. Génération de la réponse
     messages = [
         SystemMessage(
-            content="You are a helpful assistant that answers questions based on provided documents and conversation history."
+            content=(
+                "Tu es un assistant pédagogique en algèbre linéaire. "
+                "Réponds en t'appuyant sur les extraits du cours et l'historique de conversation."
+            )
         ),
-    ] + chat_history + [
-        HumanMessage(content=combined_input)
+        *chat_history,
+        HumanMessage(content=prompt),
     ]
-
     result = model.invoke(messages)
     answer = extract_text(result.content)
 
-    # Step 5: Remember this conversation
+    # 5. Mise à jour de l'historique
     chat_history.append(HumanMessage(content=user_question))
     chat_history.append(AIMessage(content=answer))
 
-    print(f"Answer: {answer}")
+    print(f"\nRéponse :\n{answer}")
     return answer
 
 
-# Simple chat loop
-def start_chat():
-    print("Ask me questions! Type 'quit' to exit.")
+def main():
+    print_header("ÉTAPE 4 : CHATBOT RAG SUR LE COURS DE MATRICES")
+    print("Posez vos questions sur les matrices ! Tapez 'quit' pour quitter.")
+    print("Exemple de suivi : demandez d'abord 'Quelles sont les valeurs propres de Q ?'")
+    print("puis demandez 'Et quels sont ses vecteurs propres ?'\n")
+
+    db = Chroma(
+        persist_directory=DB_DIR,
+        embedding_function=get_embeddings(),
+        collection_metadata={"hnsw:space": "cosine"},
+    )
+    model = get_llm()
+    chat_history = []
 
     while True:
-        question = input("\nYour question: ")
-
-        if question.lower() == "quit":
-            print("Goodbye!")
+        question = input("\nVotre question : ").strip()
+        if not question:
+            continue
+        if question.lower() in {"quit", "exit", "q"}:
+            print("Au revoir !")
             break
 
-        ask_question(question)
+        ask_question(db, model, chat_history, question)
 
 
 if __name__ == "__main__":
-    start_chat()
+    main()
