@@ -28,14 +28,8 @@ def main():
     )
 
     # 2. Question et recherche des k extraits les plus proches
-    query = "Quelles sont les valeurs propres de la matrice Q et comment calculer Q^5 ?"
+    query = "Pourquoi le produit matriciel AB est-il différent de BA ? Donne l'exemple du cours."
     retriever = db.as_retriever(search_kwargs={"k": 3})
-
-    # Variante avec seuil de similarité minimal :
-    # retriever = db.as_retriever(
-    #     search_type="similarity_score_threshold",
-    #     search_kwargs={"k": 3, "score_threshold": 0.3},
-    # )
 
     relevant_docs = retriever.invoke(query)
 
