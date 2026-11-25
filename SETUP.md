@@ -37,7 +37,7 @@ Dans le dossier du projet, créez un environnement virtuel nommé `.venv` :
 
 - **Windows :**
   ```powershell
-  python -m venv .venv
+  py -m venv .venv
   ```
 - **macOS / Linux :**
   ```bash

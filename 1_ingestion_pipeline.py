@@ -22,7 +22,7 @@ load_dotenv()
 
 # Configuration du pipeline
 DOCS_DIR = "docs"
-DB_DIR = "db/chroma_db2"
+DB_DIR = "db/chroma_db3"
 EMBEDDING_MODEL = "gemini-embedding-001"
 
 
